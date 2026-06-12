@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenGuard AI – Plant Disease Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-50: #EAF3DE;
+    --green-100: #C0DD97;
+    --green-200: #97C459;
+    --green-400: #639922;
+    --green-600: #3B6D11;
+    --green-800: #27500A;
+    --green-900: #173404;
+    --teal-50: #E1F5EE;
+    --teal-400: #1D9E75;
+    --teal-600: #0F6E56;
+    --amber-50: #FAEEDA;
+    --amber-400: #BA7517;
+    --amber-600: #854F0B;
+    --red-50: #FCEBEB;
+    --red-400: #E24B4A;
+    --red-600: #A32D2D;
+    --gray-50: #F9FAF6;
+    --gray-100: #F1EFE8;
+    --gray-200: #D3D1C7;
+    --gray-400: #888780;
+    --gray-600: #5F5E5A;
+    --gray-800: #2C2C2A;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.04);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* NAV */
+  nav {
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--green-600);
+    text-decoration: none;
+  }
+  .nav-logo .leaf-icon {
+    width: 32px; height: 32px;
+    background: var(--green-400);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .nav-logo .leaf-inner {
+    width: 14px; height: 14px;
+    background: var(--green-600);
+    border-radius: 50%;
+    transform: rotate(45deg);
+  }
+  .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+  .nav-links a {
+    font-size: 14px;
+    color: var(--gray-600);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--green-600); }
+  .nav-badge {
+    background: var(--green-50);
+    color: var(--green-600);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--green-100);
+  }
+
+  /* HERO */
+  .hero {
+    background: white;
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-600);
+    background: var(--green-50);
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--green-100);
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--green-400);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: var(--green-900);
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .hero h1 span { color: var(--green-400); }
+  .hero p {
+    font-size: 17px;
+    color: var(--gray-600);
+    max-width: 560px;
+    margin: 0 auto 2rem;
+  }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--green-600);
+    font-family: 'Playfair Display', serif;
+  }
+  .stat-label { font-size: 13px; color: var(--gray-400); }
+
+  /* MAIN LAYOUT */
+  .main-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  /* UPLOAD CARD */
+  .upload-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--gray-100);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-header-icon {
+    width: 36px; height: 36px;
+    background: var(--green-50);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .card-header h2 { font-size: 16px; font-weight: 600; color: var(--gray-800); }
+  .card-header p { font-size: 13px; color: var(--gray-400); }
+
+  /* DROP ZONE */
+  #drop-zone {
+    margin: 1.5rem;
+    border: 2px dashed var(--green-100);
+    border-radius: var(--radius-md);
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--gray-50);
+    position: relative;
+  }
+  #drop-zone:hover, #drop-zone.drag-over {
+    border-color: var(--green-400);
+    background: var(--green-50);
+  }
+  #drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .drop-icon {
+    font-size: 48px;
+    margin-bottom: 1rem;
+  }
+  .drop-title { font-size: 16px; font-weight: 600; color: var(--gray-800); margin-bottom: 0.5rem; }
+  .drop-sub { font-size: 14px; color: var(--gray-400); }
+  .drop-formats {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .format-tag {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 12px;
+    color: var(--gray-600);
+  }
+
+  /* PREVIEW */
+  #preview-area {
+    display: none;
+    margin: 0 1.5rem 1.5rem;
+  }
+  #preview-area img {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+    background: var(--gray-100);
+  }
+  .preview-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary {
+    background: var(--green-400);
+    color: white;
+    flex: 1;
+    justify-content: center;
+  }
+  .btn-primary:hover { background: var(--green-600); }
+  .btn-primary:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border: 1px solid var(--gray-200);
+  }
+  .btn-secondary:hover { background: var(--gray-200); }
+
+  /* LOADING STATE */
+  #loading-state {
+    display: none;
+    text-align: center;
+    padding: 2rem 1.5rem;
+  }
+  .loading-ring {
+    width: 48px; height: 48px;
+    border: 3px solid var(--green-100);
+    border-top-color: var(--green-400);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-steps { display: flex; flex-direction: column; gap: 8px; max-width: 280px; margin: 1rem auto 0; }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--gray-400);
+    transition: color 0.3s;
+  }
+  .step-item.active { color: var(--green-600); font-weight: 500; }
+  .step-item.done { color: var(--green-400); }
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .step-item.active .step-dot { background: var(--green-400); animation: pulse 1s infinite; }
+  .step-item.done .step-dot { background: var(--green-400); }
+
+  /* RESULTS */
+  #result-area {
+    display: none;
+    padding: 0 1.5rem 1.5rem;
+  }
+  .disease-banner {
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .disease-banner.detected {
+    background: var(--red-50);
+    border: 1px solid #F7C1C1;
+  }
+  .disease-banner.healthy {
+    background: var(--green-50);
+    border: 1px solid var(--green-100);
+  }
+  .banner-icon { font-size: 28px; flex-shrink: 0; }
+  .banner-title { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .disease-banner.detected .banner-title { color: var(--red-600); }
+  .disease-banner.healthy .banner-title { color: var(--green-600); }
+  .banner-sub { font-size: 13px; color: var(--gray-600); }
+
+  .confidence-bar {
+    background: var(--gray-100);
+    border-radius: 6px;
+    height: 8px;
+    margin: 0.75rem 0 0.25rem;
+    overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s ease;
+    background: var(--green-400);
+  }
+  .confidence-label { font-size: 12px; color: var(--gray-400); display: flex; justify-content: space-between; }
+
+  .result-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--gray-200);
+    margin-bottom: 1rem;
+    gap: 0;
+  }
+  .tab-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-400);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .tab-btn.active {
+    color: var(--green-600);
+    border-bottom-color: var(--green-400);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .info-section { margin-bottom: 1rem; }
+  .info-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .info-text { font-size: 14px; color: var(--gray-800); line-height: 1.7; }
+
+  .treatment-list { display: flex; flex-direction: column; gap: 8px; }
+  .treatment-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-100);
+  }
+  .treatment-num {
+    width: 22px; height: 22px;
+    background: var(--green-400);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .treatment-text { font-size: 13px; color: var(--gray-800); line-height: 1.5; }
+
+  .prevention-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .prev-card {
+    padding: 10px 12px;
+    background: var(--green-50);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--green-100);
+  }
+  .prev-icon { font-size: 18px; margin-bottom: 4px; }
+  .prev-title { font-size: 13px; font-weight: 600; color: var(--green-800); }
+  .prev-text { font-size: 12px; color: var(--green-600); margin-top: 2px; }
+
+  /* ERROR */
+  #error-area {
+    display: none;
+    margin: 0 1.5rem 1.5rem;
+    padding: 1rem;
+    background: var(--red-50);
+    border: 1px solid #F7C1C1;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--red-600);
+  }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .sidebar-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .sidebar-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-card-header .icon { font-size: 16px; }
+  .sidebar-card-body { padding: 1rem 1.25rem; }
+
+  /* CROPS */
+  .crops-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .crop-item {
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .crop-item:hover { background: var(--green-50); }
+  .crop-emoji { font-size: 22px; }
+  .crop-name { font-size: 10px; color: var(--gray-600); margin-top: 3px; font-weight: 500; }
+
+  /* CHAT */
+  #chat-messages {
+    max-height: 280px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0.25rem 0;
+  }
+  .chat-msg {
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    line-height: 1.6;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .chat-msg.user {
+    background: var(--green-400);
+    color: white;
+    margin-left: 1.5rem;
+    border-radius: var(--radius-sm) var(--radius-sm) 4px var(--radius-sm);
+  }
+  .chat-msg.assistant {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    color: var(--gray-800);
+    margin-right: 1.5rem;
+    border-radius: var(--radius-sm) var(--radius-sm) var(--radius-sm) 4px;
+  }
+  .chat-msg.typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 12px;
+  }
+  .typing-dot {
+    width: 6px; height: 6px;
+    background: var(--gray-400);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
+
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .chat-input-row input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    color: var(--gray-800);
+    background: var(--gray-50);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .chat-input-row input:focus { border-color: var(--green-400); background: white; }
+  .chat-send {
+    padding: 9px 14px;
+    background: var(--green-400);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .chat-send:hover { background: var(--green-600); }
+
+  /* DISEASE INDEX */
+  .disease-index { display: flex; flex-direction: column; gap: 6px; }
+  .disease-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-100);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .disease-row:hover { background: var(--green-50); }
+  .disease-row-name { color: var(--gray-800); font-weight: 500; }
+  .disease-row-crop { color: var(--gray-400); font-size: 12px; }
+  .severity-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .sev-high { background: var(--red-400); }
+  .sev-med { background: var(--amber-400); }
+  .sev-low { background: var(--green-200); }
+
+  /* TIPS */
+  .tips-list { display: flex; flex-direction: column; gap: 8px; }
+  .tip-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+  .tip-text { font-size: 13px; color: var(--gray-600); line-height: 1.5; }
+
+  /* QUICK QUESTIONS */
+  .quick-q {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .q-chip {
+    font-size: 12px;
+    padding: 5px 10px;
+    background: var(--green-50);
+    color: var(--green-800);
+    border-radius: 20px;
+    border: 1px solid var(--green-100);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .q-chip:hover { background: var(--green-100); }
+
+  /* DEMO SECTION */
+  .demo-images {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .demo-img-card {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .demo-img-card:hover { border-color: var(--green-400); }
+  .demo-img-card.selected { border-color: var(--green-400); }
+  .demo-img-placeholder {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    background: var(--gray-100);
+    border-radius: calc(var(--radius-sm) - 2px);
+  }
+  .demo-img-label { font-size: 10px; text-align: center; color: var(--gray-400); padding: 3px 0; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--gray-400);
+    font-size: 13px;
+    border-top: 1px solid var(--gray-200);
+    background: white;
+    margin-top: 2rem;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 860px) {
+    .main-container { grid-template-columns: 1fr; }
+    .sidebar { flex-direction: column; }
+    .hero-stats { gap: 2rem; }
+  }
+
+  /* Smooth scrollbar */
+  #chat-messages::-webkit-scrollbar { width: 4px; }
+  #chat-messages::-webkit-scrollbar-track { background: transparent; }
+  #chat-messages::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="leaf-icon"><div class="leaf-inner"></div></div>
+    GreenGuard AI
+  </a>
+  <div class="nav-links">
+    <a href="#">Dashboard</a>
+    <a href="#">History</a>
+    <a href="#">Crops</a>
+    <span class="nav-badge">🌱 Beta</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">AI-Powered Detection · Live</div>
+  <h1>Identify crop diseases<br>in <span>seconds</span>, not days</h1>
+  <p>Upload a leaf photo and our deep learning model — trained on 54,000+ images across 38 disease classes — delivers instant, accurate diagnosis with treatment guidance.</p>
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-num">99%</div>
+      <div class="stat-label">Classification accuracy</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">38</div>
+      <div class="stat-label">Disease classes</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">14</div>
+      <div class="stat-label">Crops supported</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">&lt;5s</div>
+      <div class="stat-label">Analysis time</div>
+    </div>
+  </div>
+</div>
+
+<div class="main-container">
+  <!-- LEFT COLUMN: Upload & Results -->
+  <div>
+    <div class="upload-card">
+      <div class="card-header">
+        <div class="card-header-icon">🔬</div>
+        <div>
+          <h2>Leaf Disease Analyzer</h2>
+          <p>Upload a clear, well-lit photo of the affected leaf</p>
+        </div>
+      </div>
+
+      <div id="drop-zone">
+        <input type="file" id="file-input" accept="image/*" />
+        <div class="drop-icon">🍃</div>
+        <div class="drop-title">Drop your leaf image here</div>
+        <div class="drop-sub">or click to browse from your device</div>
+        <div class="drop-formats">
+          <span class="format-tag">JPG</span>
+          <span class="format-tag">PNG</span>
+          <span class="format-tag">WEBP</span>
+          <span class="format-tag">up to 10MB</span>
+        </div>
+      </div>
+
+      <div id="preview-area">
+        <img id="preview-img" src="" alt="Leaf preview" />
+        <div class="preview-controls">
+          <button class="btn btn-primary" id="analyze-btn" onclick="analyzeLeaf()">
+            🔬 Analyze for Disease
+          </button>
+          <button class="btn btn-secondary" onclick="resetUpload()">
+            ↺ Reset
+          </button>
+        </div>
+      </div>
+
+      <div id="loading-state">
+        <div class="loading-ring"></div>
+        <p style="font-size:15px; font-weight:600; color: var(--gray-800); margin-bottom:0.5rem;">Analyzing leaf pattern…</p>
+        <p style="font-size:13px; color: var(--gray-400);">AI model processing your image</p>
+        <div class="loading-steps" id="loading-steps">
+          <div class="step-item" id="step1"><span class="step-dot"></span>Preprocessing image</div>
+          <div class="step-item" id="step2"><span class="step-dot"></span>Running CNN model</div>
+          <div class="step-item" id="step3"><span class="step-dot"></span>Classifying disease</div>
+          <div class="step-item" id="step4"><span class="step-dot"></span>Generating treatment plan</div>
+        </div>
+      </div>
+
+      <div id="error-area"></div>
+
+      <div id="result-area">
+        <div id="disease-banner" class="disease-banner detected">
+          <div class="banner-icon" id="banner-icon">⚠️</div>
+          <div>
+            <div class="banner-title" id="banner-title">Disease Detected</div>
+            <div class="banner-sub" id="banner-sub">Loading results…</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <div class="confidence-label"><span>Detection confidence</span><span id="confidence-pct">0%</span></div>
+          <div class="confidence-bar">
+            <div class="confidence-fill" id="confidence-fill" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="result-tabs">
+          <button class="tab-btn active" onclick="showTab('diagnosis')">Diagnosis</button>
+          <button class="tab-btn" onclick="showTab('treatment')">Treatment</button>
+          <button class="tab-btn" onclick="showTab('prevention')">Prevention</button>
+        </div>
+
+        <div id="tab-diagnosis" class="tab-content active">
+          <div class="info-section">
+            <div class="info-label">Disease Name</div>
+            <div class="info-text" id="res-disease-name">—</div>
+          </div>
+          <div class="info-section">
+            <div class="info-label">Affected Crop</div>
+            <div class="info-text" id="res-crop">—</div>
+          </div>
+          <div class="info-section">
+            <div class="info-label">Symptoms</div>
+            <div class="info-text" id="res-symptoms">—</div>
+          </div>
+          <div class="info-section">
+            <div class="info-label">Severity</div>
+            <div class="info-text" id="res-severity">—</div>
+          </div>
+        </div>
+
+        <div id="tab-treatment" class="tab-content">
+          <div class="treatment-list" id="treatment-list"></div>
+        </div>
+
+        <div id="tab-prevention" class="tab-content">
+          <div class="prevention-grid" id="prevention-grid"></div>
+        </div>
+
+        <button class="btn btn-secondary" style="width:100%; margin-top: 1rem; justify-content: center;" onclick="resetUpload()">
+          Analyze another leaf
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Farming Assistant Chat -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-header">
+        <span class="icon">🤖</span> Farming Assistant
+      </div>
+      <div class="sidebar-card-body">
+        <div class="quick-q">
+          <span class="q-chip" onclick="sendQuick('What causes tomato blight?')">Tomato blight?</span>
+          <span class="q-chip" onclick="sendQuick('How to prevent fungal diseases?')">Prevent fungus?</span>
+          <span class="q-chip" onclick="sendQuick('Best time to spray pesticides?')">Spray timing?</span>
+          <span class="q-chip" onclick="sendQuick('Organic disease remedies?')">Organic remedies?</span>
+        </div>
+        <div id="chat-messages">
+          <div class="chat-msg assistant">
+            Hello! I'm your AI farming assistant. Ask me anything about plant diseases, treatments, or crop management. 🌿
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Ask about crop diseases…" onkeydown="if(event.key==='Enter') sendChat()" />
+          <button class="chat-send" onclick="sendChat()">→</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo Images -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-header">
+        <span class="icon">🧪</span> Try a demo leaf
+      </div>
+      <div class="sidebar-card-body">
+        <p style="font-size:13px; color: var(--gray-600); margin-bottom: 8px;">Click any demo leaf to simulate disease detection:</p>
+        <div class="demo-images">
+          <div class="demo-img-card" onclick="tryDemo('tomato_blight', this)">
+            <div class="demo-img-placeholder">🍅</div>
+            <div class="demo-img-label">Tomato Blight</div>
+          </div>
+          <div class="demo-img-card" onclick="tryDemo('corn_rust', this)">
+            <div class="demo-img-placeholder">🌽</div>
+            <div class="demo-img-label">Corn Rust</div>
+          </div>
+          <div class="demo-img-card" onclick="tryDemo('grape_mildew', this)">
+            <div class="demo-img-placeholder">🍇</div>
+            <div class="demo-img-label">Grape Mildew</div>
+          </div>
+          <div class="demo-img-card" onclick="tryDemo('apple_scab', this)">
+            <div class="demo-img-placeholder">🍎</div>
+            <div class="demo-img-label">Apple Scab</div>
+          </div>
+          <div class="demo-img-card" onclick="tryDemo('potato_blight', this)">
+            <div class="demo-img-placeholder">🥔</div>
+            <div class="demo-img-label">Potato Blight</div>
+          </div>
+          <div class="demo-img-card" onclick="tryDemo('healthy_leaf', this)">
+            <div class="demo-img-placeholder">🥬</div>
+            <div class="demo-img-label">Healthy Leaf</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disease Index -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-header">
+        <span class="icon">📋</span> Disease Index
+      </div>
+      <div class="sidebar-card-body">
+        <div class="disease-index">
+          <div class="disease-row">
+            <div><div class="disease-row-name">Early Blight</div><div class="disease-row-crop">Tomato, Potato</div></div>
+            <div class="severity-dot sev-high" title="High severity"></div>
+          </div>
+          <div class="disease-row">
+            <div><div class="disease-row-name">Powdery Mildew</div><div class="disease-row-crop">Grapes, Squash</div></div>
+            <div class="severity-dot sev-med" title="Medium severity"></div>
+          </div>
+          <div class="disease-row">
+            <div><div class="disease-row-name">Leaf Curl</div><div class="disease-row-crop">Tomato, Peach</div></div>
+            <div class="severity-dot sev-med" title="Medium severity"></div>
+          </div>
+          <div class="disease-row">
+            <div><div class="disease-row-name">Common Rust</div><div class="disease-row-crop">Corn</div></div>
+            <div class="severity-dot sev-low" title="Low severity"></div>
+          </div>
+          <div class="disease-row">
+            <div><div class="disease-row-name">Black Rot</div><div class="disease-row-crop">Apple, Grapes</div></div>
+            <div class="severity-dot sev-high" title="High severity"></div>
+          </div>
+        </div>
+        <div style="display:flex; gap:12px; margin-top: 10px; font-size: 11px; color: var(--gray-400);">
+          <span><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--red-400); margin-right:3px;"></span>High</span>
+          <span><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--amber-400); margin-right:3px;"></span>Medium</span>
+          <span><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green-200); margin-right:3px;"></span>Low</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Farming Tips -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-header">
+        <span class="icon">💡</span> Smart Farming Tips
+      </div>
+      <div class="sidebar-card-body">
+        <div class="tips-list">
+          <div class="tip-item">
+            <span class="tip-icon">💧</span>
+            <div class="tip-text">Water at the base of plants — wet foliage accelerates fungal growth.</div>
+          </div>
+          <div class="tip-item">
+            <span class="tip-icon">🌞</span>
+            <div class="tip-text">Inspect crops in early morning light when symptoms are most visible.</div>
+          </div>
+          <div class="tip-item">
+            <span class="tip-icon">✂️</span>
+            <div class="tip-text">Remove and dispose of infected leaves immediately to halt disease spread.</div>
+          </div>
+          <div class="tip-item">
+            <span class="tip-icon">🔄</span>
+            <div class="tip-text">Rotate crops each season to reduce soil-borne pathogen buildup.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <strong style="color: var(--green-600);">GreenGuard AI</strong> — AI-Based Plant Disease Detection &amp; Farming Assistant &nbsp;·&nbsp;
+  Built on PlantVillage Dataset (54,000+ images, 38 classes) &nbsp;·&nbsp;
+  Team sheCODES &nbsp;·&nbsp;
+  <span style="color: var(--green-400);">Promoting smart, sustainable agriculture 🌱</span>
+</footer>
+
+<script>
+const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+
+let currentImageBase64 = null;
+let currentImageMediaType = null;
+let isDemoMode = false;
+let demoType = null;
+let chatHistory = [];
+
+// ── FILE UPLOAD ──────────────────────────────────────────────────────────────
+
+const fileInput = document.getElementById('file-input');
+const dropZone = document.getElementById('drop-zone');
+
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) handleImageFile(file);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handleImageFile(file);
+});
+
+function handleImageFile(file) {
+  isDemoMode = false;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    const dataUrl = evt.target.result;
+    const base64 = dataUrl.split(',')[1];
+    currentImageBase64 = base64;
+    currentImageMediaType = file.type || 'image/jpeg';
+    showPreview(dataUrl);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPreview(src) {
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('preview-area').style.display = 'block';
+  document.getElementById('preview-img').src = src;
+  document.getElementById('result-area').style.display = 'none';
+  document.getElementById('error-area').style.display = 'none';
+}
+
+function resetUpload() {
+  currentImageBase64 = null;
+  currentImageMediaType = null;
+  isDemoMode = false;
+  demoType = null;
+  document.getElementById('drop-zone').style.display = 'block';
+  document.getElementById('preview-area').style.display = 'none';
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('result-area').style.display = 'none';
+  document.getElementById('error-area').style.display = 'none';
+  fileInput.value = '';
+  document.querySelectorAll('.demo-img-card.selected').forEach(el => el.classList.remove('selected'));
+}
+
+// ── DEMO MODE ─────────────────────────────────────────────────────────────────
+
+const demoData = {
+  tomato_blight: {
+    disease: 'Tomato Early Blight',
+    crop: 'Tomato (Solanum lycopersicum)',
+    healthy: false,
+    confidence: 97,
+    symptoms: 'Dark brown to black spots with concentric rings (target-board pattern), yellow halo around lesions, lower leaves affected first, premature leaf drop.',
+    severity: '⚠️ High — Can cause up to 50% yield loss if untreated. Immediate action required.',
+    treatments: [
+      'Apply copper-based fungicide (e.g., Copper Oxychloride) every 7–10 days.',
+      'Remove and destroy all infected plant material immediately.',
+      'Apply chlorothalonil or mancozeb fungicide as protective spray.',
+      'Avoid overhead irrigation — use drip irrigation instead.',
+      'Apply a nitrogen-balanced fertilizer to strengthen plant immunity.'
+    ],
+    prevention: [
+      { icon: '🌱', title: 'Resistant varieties', text: 'Choose blight-resistant tomato cultivars' },
+      { icon: '🔄', title: 'Crop rotation', text: 'Rotate with non-solanaceous crops for 2–3 years' },
+      { icon: '✂️', title: 'Pruning', text: 'Remove lower leaves to improve air circulation' },
+      { icon: '🧹', title: 'Sanitation', text: 'Clear crop debris after each season' }
+    ]
+  },
+  corn_rust: {
+    disease: 'Common Corn Rust (Puccinia sorghi)',
+    crop: 'Corn / Maize (Zea mays)',
+    healthy: false,
+    confidence: 93,
+    symptoms: 'Elongated, brick-red to brown pustules scattered on both leaf surfaces, powdery orange spores released when rubbed, leaves yellow then die.',
+    severity: '🟡 Moderate — Early detection prevents major losses. Monitor closely.',
+    treatments: [
+      'Apply triazole fungicides (tebuconazole or propiconazole) at first sign.',
+      'Use strobilurin-based fungicides for systemic protection.',
+      'Scout fields weekly during humid, warm weather (16–23°C).',
+      'Apply fungicide before tasseling for best protection.'
+    ],
+    prevention: [
+      { icon: '🌽', title: 'Resistant hybrids', text: 'Plant rust-resistant corn hybrids' },
+      { icon: '📅', title: 'Early planting', text: 'Plant early to avoid peak rust season' },
+      { icon: '💨', title: 'Spacing', text: 'Adequate plant spacing improves airflow' },
+      { icon: '🌡️', title: 'Monitoring', text: 'Monitor humidity and temperature forecasts' }
+    ]
+  },
+  grape_mildew: {
+    disease: 'Downy Mildew (Plasmopara viticola)',
+    crop: 'Grapevine (Vitis vinifera)',
+    healthy: false,
+    confidence: 91,
+    symptoms: 'Oil spots on upper leaf surface, white cottony mycelium on undersides, affected areas turn brown, berry shriveling in severe cases.',
+    severity: '⚠️ High — Rapidly destructive in wet conditions. Act within 48 hours.',
+    treatments: [
+      'Apply copper-based fungicides before and after rain events.',
+      'Use systemic fungicides like metalaxyl or dimethomorph.',
+      'Remove and destroy all heavily infected shoots and leaves.',
+      'Apply potassium phosphonate to boost vine immunity.'
+    ],
+    prevention: [
+      { icon: '🍇', title: 'Canopy management', text: 'Prune for open canopy and good air circulation' },
+      { icon: '💧', title: 'Avoid wetting', text: 'Do not irrigate foliage — use drip systems' },
+      { icon: '🛡️', title: 'Protective sprays', text: 'Begin copper sprays at bud break' },
+      { icon: '📊', title: 'Disease models', text: 'Use disease forecast models for spray timing' }
+    ]
+  },
+  apple_scab: {
+    disease: 'Apple Scab (Venturia inaequalis)',
+    crop: 'Apple (Malus domestica)',
+    healthy: false,
+    confidence: 95,
+    symptoms: 'Olive-green to brown scab-like lesions on leaves and fruit, feathery edges on leaf spots, severe leaf yellowing and drop, cracked scabby areas on fruit.',
+    severity: '🟡 Moderate — Reduces fruit market value significantly.',
+    treatments: [
+      'Apply myclobutanil or captan fungicide at green tip stage.',
+      'Follow a strict spray schedule during wet spring weather.',
+      'Remove fallen infected leaves to reduce spore reservoir.',
+      'Apply lime sulfur during dormancy to kill overwintering spores.'
+    ],
+    prevention: [
+      { icon: '🍎', title: 'Resistant varieties', text: 'Plant scab-resistant apple varieties' },
+      { icon: '🍂', title: 'Leaf removal', text: 'Collect and compost fallen leaves in autumn' },
+      { icon: '✂️', title: 'Pruning', text: 'Prune trees for an open, airy structure' },
+      { icon: '📅', title: 'Timing', text: 'Apply protectant sprays before rain events' }
+    ]
+  },
+  potato_blight: {
+    disease: 'Late Blight (Phytophthora infestans)',
+    crop: 'Potato (Solanum tuberosum)',
+    healthy: false,
+    confidence: 98,
+    symptoms: 'Water-soaked dark green to brown patches on leaves, white mold on underside in humid conditions, rapid leaf collapse, brown rot spreading to stems and tubers.',
+    severity: '🔴 Critical — Cause of Irish Potato Famine. Can devastate entire crop in days.',
+    treatments: [
+      'Apply systemic fungicides (metalaxyl + mancozeb) immediately.',
+      'Remove and destroy all infected foliage — do not compost.',
+      'Apply protective sprays every 5–7 days during wet weather.',
+      'Destroy infected tubers to prevent soil contamination.',
+      'Haulm destruction before harvest reduces tuber infection risk.'
+    ],
+    prevention: [
+      { icon: '🥔', title: 'Certified seed', text: 'Use only certified disease-free seed potatoes' },
+      { icon: '🔄', title: 'Crop rotation', text: 'Never grow potatoes on infected ground' },
+      { icon: '🌬️', title: 'Air circulation', text: 'Plant in rows to allow wind movement' },
+      { icon: '🌧️', title: 'Forecasting', text: 'Use BlightAlert warning systems' }
+    ]
+  },
+  healthy_leaf: {
+    disease: 'No Disease Detected',
+    crop: 'Healthy plant detected',
+    healthy: true,
+    confidence: 99,
+    symptoms: 'Leaf appears healthy with uniform green coloration, no lesions, spots, or abnormalities detected by the AI model.',
+    severity: '✅ None — Plant is in good health. Continue current care practices.',
+    treatments: ['Maintain current watering and fertilization regime.', 'Continue monitoring weekly for early signs.'],
+    prevention: [
+      { icon: '💧', title: 'Proper watering', text: 'Water consistently at root level' },
+      { icon: '🌱', title: 'Soil health', text: 'Maintain good soil nutrition balance' },
+      { icon: '👁️', title: 'Regular checks', text: 'Inspect plants weekly for early signs' },
+      { icon: '🌿', title: 'Good practices', text: 'Keep applying your current healthy routine!' }
+    ]
+  }
+};
+
+function tryDemo(type, el) {
+  document.querySelectorAll('.demo-img-card.selected').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  isDemoMode = true;
+  demoType = type;
+  const d = demoData[type];
+  const emojis = { tomato_blight: '🍅', corn_rust: '🌽', grape_mildew: '🍇', apple_scab: '🍎', potato_blight: '🥔', healthy_leaf: '🥬' };
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('preview-area').style.display = 'block';
+  document.getElementById('result-area').style.display = 'none';
+  document.getElementById('error-area').style.display = 'none';
+  // Show a text placeholder
+  const img = document.getElementById('preview-img');
+  img.src = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect fill='%23EAF3DE' width='400' height='200' rx='8'/><text x='200' y='100' text-anchor='middle' dominant-baseline='middle' font-size='60'>${emojis[type]}</text><text x='200' y='160' text-anchor='middle' fill='%233B6D11' font-size='14' font-family='Inter,sans-serif'>${d.disease}</text></svg>`;
+}
+
+// ── ANALYSIS ─────────────────────────────────────────────────────────────────
+
+async function analyzeLeaf() {
+  if (isDemoMode && demoType) {
+    runDemoAnalysis();
+    return;
+  }
+  if (!currentImageBase64) return;
+  runRealAnalysis();
+}
+
+function showLoading() {
+  document.getElementById('preview-area').style.display = 'none';
+  document.getElementById('loading-state').style.display = 'block';
+  document.getElementById('result-area').style.display = 'none';
+  document.getElementById('error-area').style.display = 'none';
+  animateSteps();
+}
+
+function animateSteps() {
+  const steps = ['step1', 'step2', 'step3', 'step4'];
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i > 0) document.getElementById(steps[i-1]).className = 'step-item done';
+    if (i < steps.length) {
+      document.getElementById(steps[i]).className = 'step-item active';
+      i++;
+    } else {
+      clearInterval(interval);
+    }
+  }, 700);
+}
+
+function runDemoAnalysis() {
+  showLoading();
+  const d = demoData[demoType];
+  setTimeout(() => showResults(d), 3500);
+}
+
+async function runRealAnalysis() {
+  showLoading();
+  const prompt = `You are an expert plant pathologist AI. Analyze this leaf image and provide a detailed disease assessment in JSON format ONLY. No preamble, no markdown fences, just valid JSON.
+
+Return this exact structure:
+{
+  "disease": "Disease name or 'No Disease Detected'",
+  "crop": "Crop name and scientific name",
+  "healthy": true or false,
+  "confidence": 0-100 integer,
+  "symptoms": "Description of visible symptoms",
+  "severity": "Severity level with emoji and explanation",
+  "treatments": ["treatment 1", "treatment 2", "treatment 3", "treatment 4"],
+  "prevention": [
+    {"icon": "emoji", "title": "Short title", "text": "Brief tip"},
+    {"icon": "emoji", "title": "Short title", "text": "Brief tip"},
+    {"icon": "emoji", "title": "Short title", "text": "Brief tip"},
+    {"icon": "emoji", "title": "Short title", "text": "Brief tip"}
+  ]
+}`;
+
+  try {
+    const res = await fetch(ANTHROPIC_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: currentImageMediaType, data: currentImageBase64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error.message);
+
+    const text = data.content.map(c => c.text || '').join('').trim();
+    const clean = text.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    showResults(result);
+
+  } catch (err) {
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('preview-area').style.display = 'block';
+    const errEl = document.getElementById('error-area');
+    errEl.style.display = 'block';
+    errEl.textContent = '⚠️ Analysis failed: ' + err.message + '. Please try a demo image or check your connection.';
+  }
+}
+
+function showResults(d) {
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('result-area').style.display = 'block';
+
+  // Banner
+  const banner = document.getElementById('disease-banner');
+  const bannerIcon = document.getElementById('banner-icon');
+  const bannerTitle = document.getElementById('banner-title');
+  const bannerSub = document.getElementById('banner-sub');
+
+  if (d.healthy) {
+    banner.className = 'disease-banner healthy';
+    bannerIcon.textContent = '✅';
+    bannerTitle.textContent = 'Healthy Plant!';
+    bannerSub.textContent = 'No disease detected in this leaf sample.';
+  } else {
+    banner.className = 'disease-banner detected';
+    bannerIcon.textContent = '⚠️';
+    bannerTitle.textContent = 'Disease Detected';
+    bannerSub.textContent = d.disease;
+  }
+
+  // Confidence bar
+  const pct = d.confidence || 90;
+  document.getElementById('confidence-pct').textContent = pct + '%';
+  document.getElementById('confidence-fill').style.background = d.healthy ? 'var(--green-400)' : (pct > 90 ? '#E24B4A' : '#BA7517');
+  setTimeout(() => { document.getElementById('confidence-fill').style.width = pct + '%'; }, 100);
+
+  // Diagnosis tab
+  document.getElementById('res-disease-name').textContent = d.disease;
+  document.getElementById('res-crop').textContent = d.crop;
+  document.getElementById('res-symptoms').textContent = d.symptoms;
+  document.getElementById('res-severity').textContent = d.severity;
+
+  // Treatment tab
+  const treatList = document.getElementById('treatment-list');
+  treatList.innerHTML = (d.treatments || []).map((t, i) =>
+    `<div class="treatment-item"><div class="treatment-num">${i+1}</div><div class="treatment-text">${t}</div></div>`
+  ).join('');
+
+  // Prevention tab
+  const prevGrid = document.getElementById('prevention-grid');
+  prevGrid.innerHTML = (d.prevention || []).map(p =>
+    `<div class="prev-card"><div class="prev-icon">${p.icon}</div><div class="prev-title">${p.title}</div><div class="prev-text">${p.text}</div></div>`
+  ).join('');
+
+  // Auto-update chat with result context
+  const resultSummary = d.healthy
+    ? 'Great news — this leaf appears healthy!'
+    : `I've detected **${d.disease}** in this leaf image with ${d.confidence}% confidence. Would you like advice on treatment or prevention?`;
+  appendChat('assistant', resultSummary.replace(/\*\*/g, ''));
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+
+function showTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', b.textContent.toLowerCase().startsWith(name));
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'tab-' + name);
+  });
+}
+
+// ── CHAT ─────────────────────────────────────────────────────────────────────
+
+function appendChat(role, text) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg assistant typing';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if (t) t.remove();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  appendChat('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+  showTyping();
+
+  const systemPrompt = `You are GreenGuard AI, an expert agricultural assistant specializing in plant diseases, crop management, and sustainable farming. You provide practical, actionable advice for farmers. Be concise (2-4 sentences max per response), friendly, and use occasional farming emojis. Focus on evidence-based recommendations.`;
+
+  try {
+    const res = await fetch(ANTHROPIC_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: chatHistory
+      })
+    });
+    const data = await res.json();
+    removeTyping();
+
+    if (data.error) throw new Error(data.error.message);
+
+    const reply = data.content.map(c => c.text || '').join('').trim();
+    chatHistory.push({ role: 'assistant', content: reply });
+    appendChat('assistant', reply);
+
+    if (chatHistory.length > 20) chatHistory = chatHistory.slice(-16);
+
+  } catch (err) {
+    removeTyping();
+    appendChat('assistant', '⚠️ Sorry, I couldn\'t connect right now. Please try again.');
+  }
+}
+
+function sendQuick(text) {
+  document.getElementById('chat-input').value = text;
+  sendChat();
+}
+
+// Keep chat history scoped
+chatHistory = [
+  { role: 'user', content: 'Hello, I am a farmer needing help with plant diseases.' },
+  { role: 'assistant', content: 'Hello! I\'m your AI farming assistant. Ask me anything about plant diseases, treatments, or crop management. 🌿' }
+];
+</script>
+</body>
+</html>
